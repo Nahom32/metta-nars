@@ -1,12 +1,11 @@
 !(register-module! ../metta-nars)
 !(import! &self metta-nars:src:logic:nal1)
+!(import! &self metta-nars:src:NARS)
 !(bind! &test (new-space))
 ((: r1 ((TTV 1 (STV 0.8 0.7)) (IMPLICATION_LINK 
               (AND_LINK ((Goal Conversation-Started 0.9 0.6) initiate-dialogue)) (Goal Send-Greeting 1.0 1.0)))) 4)
 (= (convertScheme ((: $handle ($tv (IMPLICATION_LINK (AND_LINK ($context $action)) $goal))) $weight))
-    (((AND_LINK ($context $action)) --> $goal) $tv)
-
-)
+    (let (TTV $time (STV $f $c)) $tv (((AND_LINK ($context $action)) --> $goal) ($f $c))))
 
 (= (addRulesToTestSpace $space)
     (add-reduct $space (superpose     
@@ -315,3 +314,38 @@
 !(addRulesToTestSpace &test)
 
 !(convertRulesToNars &test)
+
+(= (applyInferenceForRule $rule $rules $accum)
+  (if (== $rules ())
+    $accum
+    (let* (
+        (($head $tail) (decons-atom $rules))
+        ($results (|- $rule $head))
+        ($accum' (union-atom $accum ($results)))
+    ) 
+      (applyInferenceForRule $rule $tail $accum')
+  )
+))
+
+(= (applyInference' $rules $accum)
+  (if (== $rules ())
+  $accum
+  (let* (
+    (($head $tail) (decons-atom $rules))
+    ($inferedRules (applyInferenceForRule $head $tail ()))
+    ($accum' (union-atom $accum $inferedRules))
+  )
+   (applyInference' $tail $accum')
+  ))
+)
+
+(= (applyInference $space)
+  (let* (
+    ($narsRules (convertRulesToNars $space))
+    ($newRules (applyInference' $narsRules ()))
+  )
+    $newRules
+  )
+)
+
+!(applyInference &test)
