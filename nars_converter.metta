@@ -314,14 +314,32 @@
 !(addRulesToTestSpace &test)
 
 !(convertRulesToNars &test)
+(: isMember (-> $aa Expression Bool))
+(= (isMember $item $list) 
+        (if (== $list ()) 
+            False 
+            (let ($head $tail) (decons-atom $list) 
+                (if (== $head $item) 
+                    True 
+                    (isMember $item $tail)))))
 
+
+(= (all $expression)
+    (let $exp (collapse (if (== (superpose $expression) True) True (empty))) (if (< (size-atom $exp) (size-atom $expression)) False True))
+)
+(= (any $expression)
+    (let $exp (collapse (if (== (superpose $expression) True) True (empty))) (if (== $exp ()) False True)))
+!(all (False True True))
+!(all (False False False False))
+(: isReduced (-> Expression Bool))
+(= (isReduced $value) (all (collapse (not (isMember |- (superpose $value))))))
 (= (applyInferenceForRule $rule $rules $accum)
   (if (== $rules ())
     $accum
     (let* (
         (($head $tail) (decons-atom $rules))
-        ($results (|- $rule $head))
-        ($accum' (union-atom $accum ($results)))
+        ($results (|- $rule $head)) 
+        ($accum' (if (isReduced $results) $accum (union-atom $accum ($results))))
     ) 
       (applyInferenceForRule $rule $tail $accum')
   )
@@ -347,5 +365,4 @@
     $newRules
   )
 )
-
 !(applyInference &test)
