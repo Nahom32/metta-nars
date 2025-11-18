@@ -263,6 +263,11 @@
             (IMPLICATION_LINK 
             (AND_LINK ((Goal full_energy 0.9 0.75) shutdown)) 
             (Goal system_off 1.0 1.0)))) 1)
+    ((: r33' ((TTV 1 (STV 0.65 0.6)) 
+            (IMPLICATION_LINK 
+            (AND_LINK ((Goal less_energy 0.9 0.75) shutdown)) 
+            (Goal system_off 1.0 1.0)))) 1)
+
 
     ;; r34: Wake when system off
     ((: r34 ((TTV 1 (STV 0.75 0.7)) 
@@ -329,17 +334,21 @@
 )
 (= (any $expression)
     (let $exp (collapse (if (== (superpose $expression) True) True (empty))) (if (== $exp ()) False True)))
-!(all (False True True))
-!(all (False False False False))
+
+
 (: isReduced (-> Expression Bool))
-(= (isReduced $value) (all (collapse (not (isMember |- (superpose $value))))))
+(= (isReduced $value) (all (collapse (not (isMember reason (superpose $value))))))
+
 (= (applyInferenceForRule $rule $rules $accum)
   (if (== $rules ())
     $accum
     (let* (
         (($head $tail) (decons-atom $rules))
-        ($results (|- $rule $head)) 
-        ($accum' (if (isReduced $results) $accum (union-atom $accum ($results))))
+        ($results (reason $rule $head))
+        ($_ (println! (results $results)))
+        ($reduced (isReduced $results))
+        ($_ (println! (reduced $reduced)))
+        ($accum' (if $reduced $accum (union-atom $accum ($results))))
     ) 
       (applyInferenceForRule $rule $tail $accum')
   )
@@ -366,3 +375,16 @@
   )
 )
 !(applyInference &test)
+
+!(convertScheme ((: r33' ((TTV 1 (STV 0.65 0.6)) 
+            (IMPLICATION_LINK 
+            (AND_LINK ((Goal less_energy 0.9 0.75) shutdown)) 
+            (Goal system_off 1.0 1.0)))) 1)
+)
+
+!(convertScheme 
+    ((: r33 ((TTV 1 (STV 0.65 0.6)) 
+            (IMPLICATION_LINK 
+            (AND_LINK ((Goal full_energy 0.9 0.75) shutdown)) 
+            (Goal system_off 1.0 1.0)))) 1))
+
