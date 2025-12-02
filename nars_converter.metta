@@ -150,7 +150,7 @@
     $newRules
   )
 )
-!(applyInference  &test)
+;;!(applyInference  &test)
 
 
 !(reason (convertScheme (( r33' ((TTV 1 (STV 0.65 0.6)) 
@@ -164,5 +164,16 @@
             (IMPLICATION_LINK 
             (AND_LINK ((Goal full_energy 0.9 0.75) shutdown))  
             (Goal system_off 1.0 1.0)))) 1)))
+(= (randomizer $size $accum $sentinel)
+  (if (== $size 0) $accum
+  (let* (
+    ($randVal (random-int &rng 0 (/ $sentinel 4)))
+    ($isMember (isMember $randVal $accum))
+  )
+    (if $isMember (randomizer (- $size 1) $accum $sentinel) (randomizer (- $size 1) (cons-atom $randVal $accum) $sentinel))
+  ))
+)
+
+!(randomizer 10 () 20)
 
 !(size-atom (collapse (match &test ((r33 $schema) $weight) $schema)))
