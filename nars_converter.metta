@@ -157,23 +157,49 @@
             (IMPLICATION_LINK 
             (AND_LINK ((Goal less_energy 0.9 0.75) shutdown)) 
             (Goal system_off 1.0 1.0)))) 1)
-)
+    )
+    (convertScheme 
+        (( r33 ((TTV 1 (STV 0.65 0.6)) 
+                (IMPLICATION_LINK 
+                (AND_LINK ((Goal full_energy 0.9 0.75) shutdown))  
+                (Goal system_off 1.0 1.0)))) 1)))
+    
 
-(convertScheme 
-    (( r33 ((TTV 1 (STV 0.65 0.6)) 
-            (IMPLICATION_LINK 
-            (AND_LINK ((Goal full_energy 0.9 0.75) shutdown))  
-            (Goal system_off 1.0 1.0)))) 1)))
-(= (randomizer $size $accum $sentinel)
+(= (randomizer' $size $accum $sentinel $noOfSamples)
   (if (== $size 0) $accum
-  (let* (
-    ($randVal (random-int &rng 0 (/ $sentinel 4)))
-    ($isMember (isMember $randVal $accum))
-  )
-    (if $isMember (randomizer (- $size 1) $accum $sentinel) (randomizer (- $size 1) (cons-atom $randVal $accum) $sentinel))
-  ))
+      (let* (
+        ($randVal (random-int &rng 0 $noOfSamples))
+        ($isMember (isMember $randVal $accum))
+      )
+        (if $isMember (randomizer' (- $size 1) $accum $sentinel $noOfSamples) (randomizer' (- $size 1) (cons-atom $randVal $accum) $sentinel $noOfSamples))
+    ))
 )
 
-!(randomizer 10 () 20)
 
+!(randomizer' 10 () 20 4)
+(= (randomizer $list $size) (randomizer' $size () (size-atom $list) $size))
+(:selectRandom (-> Expression Number Expression))
+(= (selectRandom $list $size) 
+    (let* (
+      ($randomList (randomizer $list $size))
+      ($selectedValues (massSelect $list $randomList ()))
+
+    )
+      $selectedValues
+    ))
+(: massSelect (-> Expression Expression Expression Expression))
+(= (massSelect $list $indiceList $acc)
+    (if (== $indiceList ()) 
+        $acc 
+        (let* (
+          (($head $tail) (decons-atom $indiceList))
+          ($val (index-atom $list $head))
+          ($acc' (cons-atom $val $acc))
+        )  
+          (massSelect $list $tail $acc')
+        )
+    )
+)
+
+!(selectRandom (a b c d e f g h i j k l m n o p q r s t u v w x y z) 10)
 !(size-atom (collapse (match &test ((r33 $schema) $weight) $schema)))
