@@ -203,3 +203,20 @@
 
 !(selectRandom (a b c d e f g h i j k l m n o p q r s t u v w x y z) 10)
 !(size-atom (collapse (match &test ((r33 $schema) $weight) $schema)))
+
+(= (greedySelection' $list $best $evalFunc)
+  (if (== $list ())
+    $best
+    (let* (
+      (($head $tail) (decons-atom $list))
+      ($bestEval ($evalFunc $best))
+      ($headEval ($evalFunc $head))
+    )
+      (if ( >= $bestEval $headEval) (greedySelection' $tail $best $evalFunc) (greedySelection' $tail $head $evalFunc))
+    )
+  )
+)
+(: (greedySelection (-> Expression (-> Expression Number) Expression)))
+(= (greedySelection $list $evalFunc)
+  (if (== $list ()) $list (let ($head $tail) (decons-atom $list) (greedySelection $tail $head $evalFunc)))
+)
