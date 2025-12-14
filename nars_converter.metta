@@ -216,7 +216,15 @@
     )
   )
 )
+
+
 (: (greedySelection (-> Expression (-> Expression Number) Expression)))
 (= (greedySelection $list $evalFunc)
   (if (== $list ()) $list (let ($head $tail) (decons-atom $list) (greedySelection $tail $head $evalFunc)))
 )
+
+(= (meanStv $rule) (let* (
+  ((STV $me) (extractStv $rule))
+)
+  ()
+))
