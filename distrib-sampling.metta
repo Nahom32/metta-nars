@@ -201,7 +201,6 @@
 (= (convertShortToBetaSample $shortRule)
     (let* (
       (($ruleId ($a $b)) $shortRule)
-      ($_ (println! (shortRuleInBetaSample $a $b)))
       ($betaResult (betaSample $a $b))
     )
       ($ruleId $betaResult)
@@ -295,7 +294,7 @@
 ))
 
 !(addGameRules &ruleSpace)
-(= (probBasedSample $ruleSpace)
+(= (probBasedSample $ruleSpace $k)
     (let* (
         ($rules (collapse (get-atoms $ruleSpace)))
         ($_ (println! (rules $rules)))
@@ -304,10 +303,60 @@
         ($idsWithBeta (collapse (changeSTVToBeta (superpose $ids))))
         ($_ (println! (idsWithBeta $idsWithBeta)))
         ($idsWithDistrib (collapse (convertShortToBetaSample (superpose $idsWithBeta))))
-    )
-    $idsWithDistrib
+        ($sortedRules (sortRules $idsWithDistrib dec))
+        ($selectedRules (if (>= $k (size-atom $rules)) $sortedRules (let ($left $right) (splitAt  $k  $sortedRules)  $left)))
+        
+        )
+            $selectedRules 
     )
 )
 
-!(probBasedSample &ruleSpace)
+(= (splitAt $n $list)
+   (case ($n $list)
+     (
+       ((0 $list) (() $list))
+       (($_ ()) (() ()))
+       (($n $list)
+          (let*
+             (
+               (($x $xs) (decons $list))
+               (($left $right) (splitAt (- $n 1) $xs))
+             )
+             ((cons-atom $x $left) $right)
+          )
+       )
+     )
+   )
+)
+(= (mergeSortRules () $right $cmp) $right)
+(= (mergeSortRules $left () $cmp) $left)
+
+(= (mergeSortRules $left $right $cmp)
+     (let* (
+            ((($lid $lh) $lt) (decons-atom $left))
+
+            ((($rid $rh) $rt) (decons-atom $right))
+            ($res1 (mergeSortRules $lt $right $cmp))
+            ($res2 (mergeSortRules $left $rt $cmp))
+            )
+       (if ($cmp $lh $rh)
+         (cons-atom ($lid $lh) $res1)
+         (cons-atom ($rid $rh) $res2)
+         )
+       )
+     )
+
+(= (sortRules $list $key)
+   (if (<= (size-atom $list) 1)
+       $list
+       (let* (
+               ($mid (floor-math (/ (size-atom $list) 2)))
+       (($left $right) (splitAt $mid $list))
+               ($cmp (if (== dec $key) > <=))
+             )
+             (mergeSortRules (sortRules $left $key) (sortRules $right $key) $cmp)
+       )
+   )
+)
+!(probBasedSample &ruleSpace 4)
 !(getRuleIdWithStv (get-atoms &ruleSpace))
